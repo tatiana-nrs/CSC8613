@@ -233,7 +233,7 @@ SELECT version(); indique que la base de données utilise PostgreSQL 16.11 (Debi
 ### **Étape 3 — Comprendre la connexion depuis d'autres services**
 
 ### **Question 6.c**
-Dans Docker Compose, les services partagent un réseau interne, ce qui permet à un autre service de se connecter à la base PostgreSQL en utilisant simplement le nom du service comme hostname. Ainsi, pour accéder à la base, le service doit utiliser `db` comme hostname, car c’est le nom du service défini dans le fichier docker-compose.yml. La connexion se fait sur le port standard PostgreSQL, `5432`. Les identifiants de connexion à utiliser sont ceux définis dans les variables d’environnement du service PostgreSQL, à savoir l’utilisateur `demo`, le mot de passe `demo`, et la base de données `demo`.
+Dans Docker Compose, les services partagent un réseau interne, ce qui permet à un autre service de se connecter à la base PostgreSQL en utilisant simplement le nom du service comme hostname. Ainsi, pour accéder à la base, le service doit utiliser `db` comme hostname. La connexion se fait sur le port standard PostgreSQL, `5432`. Les identifiants de connexion à utiliser sont ceux définis dans les variables d’environnement du service PostgreSQL, à savoir l’utilisateur `demo`, le mot de passe `demo`, et la base de données `demo`.
 
 ### **Étape 4 — Nettoyer**
 
@@ -241,7 +241,7 @@ Dans Docker Compose, les services partagent un réseau interne, ce qui permet à
 
 ![alt text](images/image-19.png)
 
-Après les tests, la commande `docker compose down` permet d’arrêter la stack et de supprimer les conteneurs ainsi que le réseau associé, mais elle laisse les volumes Docker intacts. En revanche, l’option `-v` demande en plus la suppression des volumes liés aux services, donc des données persistantes stockées par PostgreSQL. Donc toutes les tables et le contenu de la base `demo` sont effacés : au prochain `docker compose up`, la base sera recréée vide comme au premier lancement. 
+Après les tests, la commande `docker compose down` permet d’arrêter la stack et de supprimer les conteneurs ainsi que le réseau associé, mais elle laisse les volumes Docker intacts. En revanche, l’option `-v` demande en plus la suppression des volumes liés aux services, donc des données persistantes stockées par PostgreSQL. Donc toutes les tables et le contenu de la base `demo` sont effacés.
 
 ---
 
@@ -281,7 +281,7 @@ La commande /health renvoie toujours {"status": "ok"} donc l’API est donc bien
 ![alt text](images/image-25.png)
 ![alt text](images/image-26.png)
 
-On voit que l’erreur provient directement du fichier app.py : @app.get("/health") fait référence à une variable app qui n’existe plus, car elle a été renommée en appi. C’est en lisant cette partie des logs (la fin) que j’ai pu identifier la cause exacte du problème et comprendre pourquoi le conteneur api ne démarrait pas.
+On voit que l’erreur provient directement du fichier app.py : @app.get("/health") fait référence à une variable app qui n’existe plus, car elle a été renommée en appi. C’est en lisant cette partie des logs (la fin) que j’ai pu identifier la cause exacte du problème.
 
 
 ### ** Étape 5 — Supprimer des conteneurs et images** 
@@ -301,18 +301,18 @@ Il est utile de nettoyer régulièrement son environnement Docker pour éviter d
 ### **Question 8.a**
 Un notebook Jupyter est un bon outil pour expérimenter, mais il n’est pas adapté au déploiement réel d’un modèle de Machine Learning. Cela s’explique par plusieurs limites:
 
-- Premièrement un manque de reproductibilité. En effet, un notebook ne garantit pas que deux exécutions donneront le même résultat, car l’ordre des cellules peut varier.
-- Un environnement d'éxécution flou car les notebooks utilisent l’environnement local du développeur (librairies, versions…) et cela entraîne rapidement des conflits de dépendances alors que Docker fourni un envirronement controlé.
-- Un notebook n’intègre pas le versionnage du code, des données ou des modèles. 
-- Un notebook ne permet pas de monitorer les performances du modèle en production (erreurs, latence…) alors qu'en production les données évoluent et il faut els monitorer.
+- Premièrement un manque de reproductibilité. En effet, un notebook ne garantit pas que deux exécutions donneront le même résultat car l’ordre des cellules peut varier.
+- Un environnement d'éxécution flou car les notebooks utilisent l’environnement local du développeur (librairies, versions…) et cela entraîne rapidement des conflits de dépendances alors que Docker fourni un environnement controlé.
+- Un notebook n’intègre pas le versionnage du code, des données ou des modèles mais Docker si.
+- Un notebook ne permet pas de monitorer les performances du modèle en production (erreurs, latence…) alors qu'en production les données évoluent et il faut les monitorer.
 - Pas de scalabilité ni d'API.
 
 ### **Question 8.b**
-Dans un système de Machine Learning, plusieurs composants doivent fonctionner ensemble : API d’inférence, base de données, orchestrateur, monitoring, feature store, etc.  Docker Compose est donc un outil essentiel car:
+Dans un système de Machine Learning, plusieurs composants doivent fonctionner ensemble : API d’inférence, base de données etc.  Docker Compose est donc un outil essentiel car:
   
-Docker Compose permet de définir toute l’architecture dans un seul fichier (`docker-compose.yml`).  Ainsi, n’importe qui peut reproduire exactement le même environnement sur sa machine. Cela assure donc la reproductibilité. Il gère les dépendances (API et base de données).
+Il permet de définir toute l’architecture dans un seul fichier (`docker-compose.yml`).  Ainsi, n’importe qui peut reproduire exactement le même environnement sur sa machine. Cela assure donc la reproductibilité. Il gère les dépendances (API et base de données).
   
-De plus, Une seule commande permet de lancer toute la stack :  
+De plus, une seule commande permet de lancer toute la stack :  
 ```bash
 docker compose up -d
 ```
