@@ -16,13 +16,13 @@ Après la commande :
 docker run hello-world
 ```
 
-![alt text](images/image.png)
+![alt text](images/TP1/image.png)
 
 Docker a bien téléchargé l’image hello-world et lance un conteneur basé sur cette image qui affiche un message.
 
 ### **Question 1.c**
 
-![alt text](images/image-1.png)
+![alt text](images/TP1/image-1.png)
 
 La commande docker ps -a liste tous les conteneurs présents sur la machine, qu’ils soient en cours d’exécution ou arrêtés. On y voit par exemple le conteneur hello-world avec un statut Exited, car il a fini d’exécuter sa tâche qui était celle d’afficher le message et s’est arrêté. On a aussi un autre conteneur utilisé il y’a 10 mois.
 
@@ -37,19 +37,19 @@ Un conteneur est une instance en cours d’exécution d’une image et possède 
 
 ### **Question 2.b**
 
-![alt text](images/image-2.png)
+![alt text](images/TP1/image-2.png)
 
 Docker télécharge l’image Alpine puis crée un conteneur temporaire pour exécuter la commande echo demandée. On voit que le conteneur affiche bien le message “Bonjour depuis un conteneur Alpine”, puis s’arrête, car il n’a plus aucune tâche à exécuter.
 
 ### **Question 2.c**
 
-![alt text](images/image-3.png)
+![alt text](images/TP1/image-3.png)
 
 Le conteneur Alpine apparaît avec le statut Exited, car il a terminé sa tâche (exécuter un echo). Dès qu’un conteneur n’a plus de processus actif, Docker l’arrête. Il reste visible dans docker ps -a tant qu’il n’est pas supprimé.
 
 ### **Question 2.d**
 
-![alt text](images/image-4.png)
+![alt text](images/TP/image-4.png)
 
 La commande ls montre la structure du système Linux. Alpine embarque uniquement les répertoires essentiels (bin, etc, lib, tmp…) ce qui confirme qu’il s’agit d’une distribution très légère.
 
@@ -104,7 +104,7 @@ CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ### **Question 3.c**
 
-![alt text](images/image-5.png)
+![alt text](images/TP1/image-5.png)
 
 ---
 
@@ -114,20 +114,20 @@ CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ### **Question 4.a**
 
-![alt text](images/image-6.png)
+![alt text](images/TP1/image-6.png)
 
 L’option -p 8000:8000 expose le port 8000 du conteneur sur le port 8000 de la machine hôte.
 
 ### **Question 4.b**
 
-![alt text](images/image-7.png)
-![alt text](images/image-8.png)
+![alt text](images/TP1/image-7.png)
+![alt text](images/TP1/image-8.png)
 
 ### **Étape 3 — Observer les conteneurs en cours d'exécution**
 
 ### **Question 4.c**
 
-![alt text](images/image-9.png)
+![alt text](images/TP1/image-9.png)
 
 À partir de cette sortie, on peut identifier :
 
@@ -139,7 +139,7 @@ L’option -p 8000:8000 expose le port 8000 du conteneur sur le port 8000 de la 
 
 ### **Question 4.d**
 
-![alt text](images/image-10.png)
+![alt text](images/TP1/image-10.png)
 
 La commande docker ps n’affiche plus le conteneur, car il n’est plus en cours d’exécution mais docker ps -a l’affiche toujours, avec statut Exited car Docker conserve les conteneurs arrêtés tant qu’ils ne sont pas supprimés.
 
@@ -151,7 +151,7 @@ La commande docker ps n’affiche plus le conteneur, car il n’est plus en cour
 
 ### **Question 5.a**
 
-![alt text](images/image-11.png)
+![alt text](images/TP1/image-11.png)
 
 ### **Étape 2 — Compléter le fichier docker-compose.yml**
 
@@ -187,8 +187,8 @@ services:
 
 ### **Question 5.c**
 
-![alt text](images/image-12.png)
-![alt text](images/image-13.png)
+![alt text](images/TP1/image-12.png)
+![alt text](images/TP1/image-13.png)
 
 Les services db et api sont bien démarrés.
 
@@ -196,14 +196,14 @@ Les services db et api sont bien démarrés.
 
 ### **Question 5.d**
 
-![alt text](images/image-15.png)
-![alt text](images/image-14.png)
+![alt text](images/TP1/image-15.png)
+![alt text](images/TP1/image-14.png)
 
 ### **Étape 5 — Arrêter proprement les services**
 
 ### **Question 5.e**
 
-![alt text](images/image-16.png)
+![alt text](images/TP1/image-16.png)
 
 docker compose down arrête tous les services définis, supprime les conteneurs et le réseau Docker Compose alors que docker stop <id> arrête seulement un conteneur individuel sans le supprimer et s'attend à avoir l'id du conteneur derrière.
 
@@ -213,7 +213,7 @@ docker compose down arrête tous les services définis, supprime les conteneurs 
 
 ### **Pré-requis**
 
-![alt text](images/image-17.png)
+![alt text](images/TP1/image-17.png)
 
 La stack est bien démarrée.
 
@@ -226,7 +226,7 @@ exec permet d'exécuter une commande dans un conteneur en cours d’exécution, 
 
 ### **Question 6.b**
 
-![alt text](images/image-18.png)
+![alt text](images/TP1/image-18.png)
 
 SELECT version(); indique que la base de données utilise PostgreSQL 16.11 (Debian, 64-bit) sur une architecture aarch64 (environnement Linux dans le conteneur) et SELECT current_database(); confirme que la base actuellement utilisée est bien nommée demo, comme défini dans le docker-compose.yml.
 
@@ -239,7 +239,7 @@ Dans Docker Compose, les services partagent un réseau interne, ce qui permet à
 
 ### **Question 6.d**
 
-![alt text](images/image-19.png)
+![alt text](images/TP1/image-19.png)
 
 Après les tests, la commande `docker compose down` permet d’arrêter la stack et de supprimer les conteneurs ainsi que le réseau associé, mais elle laisse les volumes Docker intacts. En revanche, l’option `-v` demande en plus la suppression des volumes liés aux services, donc des données persistantes stockées par PostgreSQL. Donc toutes les tables et le contenu de la base `demo` sont effacés.
 
@@ -251,7 +251,7 @@ Après les tests, la commande `docker compose down` permet d’arrêter la stack
 
 ### **Question 7.a**
 
-![alt text](images/image-20.png)
+![alt text](images/TP1/image-20.png)
 
 Au démarrage de l’API, les logs affichent que le serveur est lancé: Uvicorn running on http://0.0.0.0:8000.
 Lorsque j’envoie une requête GET /health (via curl http://localhost:8000/health), une ligne apparaît dans les logs avec un statut 200 OK, ce qui confirme que l’endpoint /health répond correctement.
@@ -260,7 +260,7 @@ Lorsque j’envoie une requête GET /health (via curl http://localhost:8000/heal
 
 ### **Question 7.b**
 
-![alt text](images/image-21.png)
+![alt text](images/TP1/image-21.png)
 
 On voit bien app.py dans les fichiers listés avec ls. La version de python est bien en 3.11.
 
@@ -268,8 +268,8 @@ On voit bien app.py dans les fichiers listés avec ls. La version de python est 
 
 ### **Question 7.c**
 
-![alt text](images/image-22.png)
-![alt text](images/image-23.png)
+![alt text](images/TP1/image-22.png)
+![alt text](images/TP1/image-23.png)
 
 La commande /health renvoie toujours {"status": "ok"} donc l’API est donc bien redemarrée. Un redémarrage de service est utile lorsque l’API ne répond plus, après une modification de configuration, ou pour relancer proprement un service sans arrêter toute la stack.
 
@@ -277,9 +277,9 @@ La commande /health renvoie toujours {"status": "ok"} donc l’API est donc bien
 
 ### **Question 7.d**
 
-![alt text](images/image-24.png)
-![alt text](images/image-25.png)
-![alt text](images/image-26.png)
+![alt text](images/TP1/image-24.png)
+![alt text](images/TP1/image-25.png)
+![alt text](images/TP1/image-26.png)
 
 On voit que l’erreur provient directement du fichier app.py : @app.get("/health") fait référence à une variable app qui n’existe plus, car elle a été renommée en appi. C’est en lisant cette partie des logs (la fin) que j’ai pu identifier la cause exacte du problème.
 
@@ -288,7 +288,7 @@ On voit que l’erreur provient directement du fichier app.py : @app.get("/healt
 
 ### **Question 7.e**
 
-![alt text](images/image-27.png)
+![alt text](images/TP1/image-27.png)
 
 Il est utile de nettoyer régulièrement son environnement Docker pour éviter d’occuper de l’espace disque inutilement, éviter les conflits entre anciennes images et nouvelles versions et garder un environnement propre, lisible et plus facile à déboguer.
 
