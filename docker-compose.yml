@@ -2,16 +2,6 @@ version: "3.9"
 
 services:
 
-  # api:
-  #   # TODO: construire l'image à partir du Dockerfile dans ./api
-  #   build: ./api
-  #   ports:
-  #     # TODO: exposer le port 8000 du conteneur vers l'hôte
-  #     - "8000:8000"
-  #   depends_on:
-  #     # TODO: indiquer que l'API dépend de la base de données
-  #     - db
-
   postgres:
     image: postgres:16
     env_file: .env         # Utiliser les variables définies dans .env
@@ -37,7 +27,29 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./services/prefect:/opt/prefect/flows
-      - ./data:/data:ro      # Rendre les CSV accessibles au conteneur Prefect
+      - ./data:/data            # enlever :ro pour rendre le volume en écriture
+      - ./services/feast_repo/repo:/repo          # Accès à Feast
+
+  feast:
+    build: ./services/feast_repo        
+    depends_on:
+      - postgres
+    environment:
+      FEAST_USAGE: "False"
+    volumes:
+      - ./services/feast_repo/repo:/repo 
+
+  api:
+    build: ./api
+    env_file: .env
+    depends_on:
+      - postgres
+      - feast
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+      - ./services/feast_repo/repo:/repo   # pour que l'API voie le repo Feast
 
 volumes:
   pgdata:
