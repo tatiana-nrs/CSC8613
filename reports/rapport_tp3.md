@@ -8,13 +8,13 @@ CSC8613 – TP3
 
 ### **Question 1.a**
 
-![alt text](image.png)
+![alt text](images/TP3/image.png)
 
 Le tag pour le TP2 a bien été créé.
 
 ### **Question 1.b**
 
-![alt text](image-1.png)
+![alt text](images/TP3/image-1.png)
 
 On a bien créé le repport dédié au TP 3.
 
