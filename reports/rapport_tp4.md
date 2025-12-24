@@ -50,7 +50,7 @@ Plusieurs composants tournent simultanément. PostgreSQL stocke les données sou
 
 ### **Question 2.a**
 
-On utilise pipe et non clf parce que c’est le vrai objet de serving et il contient le preprocessing (OneHotEncoder, passthrough) et le modèle. Si on utilise juste clf, en production, on n'aura pas le même encodage des colonnes et donc un predict cassé ou incohérent (training/serving skew).
+On utilise pipe et non clf parce que c’est le vrai objet de serving et il contient le preprocessing (OneHotEncoder, passthrough) et le modèle. Si on utilise juste clf, en production on n'aura pas le même encodage des colonnes et donc un predict cassé ou incohérent.
 
 ### **Question 2.b**
 
@@ -71,9 +71,9 @@ Les métriques calculées sur le jeu de validation montrent une AUC de 0,6233, u
 
 ### **Question 2.d**
 
-Fixer la valeur de AS_OF est essentiel dans un pipeline MLOps orienté reproductibilité, car cela permet de figer le contexte temporel des données utilisées pour l’entraînement. Les features sont ainsi calculées uniquement à partir des informations disponibles à cette date, ce qui évite toute fuite de données provenant du futur et garantit la cohérence temporelle entre entraînement et évaluation.
+Fixer la valeur de AS_OF est essentiel dans un pipeline MLOps, car cela permet de figer le contexte temporel des données utilisées pour l’entraînement ici au 31 janvier. Les features sont ainsi calculées uniquement à partir des informations disponibles à cette date, ce qui évite toute fuite de données provenant du futur.
 
-De la même manière, fixer le random_state permet de rendre l’entraînement déterministe. Les étapes aléatoires comme la séparation entre train et validation ou l’initialisation du modèle produisent alors toujours les mêmes résultats. Cela permet de reproduire exactement un entraînement donné, de comparer plusieurs versions de modèles de manière fiable et de faciliter le débogage et l’audit du pipeline en production.
+De la même manière, fixer le random_state permet de reproduire exactement un entraînement donné, de comparer plusieurs versions de modèles de manière fiable et de faciliter le débogage.
 
 ---
 
@@ -112,7 +112,7 @@ C'est la version 3 qui est promue (voir captures avant).
 
 ### **Question 3.g**
 
-La promotion d’un modèle via des stages (None, Staging, Production) est préférable à un déploiement manuel basé sur des fichiers locaux, car elle apporte un cadre clair et traçable au cycle de vie du modèle. Les stages permettent de séparer explicitement les modèles en test de ceux réellement utilisés en production. Cette approche réduit fortement les risques d’erreurs humaines, facilite les rollbacks et garantit que l’API consomme toujours une version validée et identifiée du modèle. Elle est également essentielle pour le travail collaboratif et pour l’auditabilité en environnement MLOps.
+La promotion d’un modèle via des stages (None, Staging, Production) est préférable à un déploiement manuel basé sur des fichiers locaux, car elle apporte un cadre traçable du modèle. Les stages permettent de séparer explicitement les modèles en test de ceux réellement utilisés en production. Cette approche réduit fortement les risques d’erreurs humaines, facilite les rollbacks et garantit que l’API consomme toujours une version validée et identifiée du modèle.
 
 ---
 
@@ -154,7 +154,7 @@ On peut aussi la faire via Swagger UI:
 
 ### **Question 4.g**
 
-Pointer l’API vers models:/streamflow_churn/Production garantit qu’elle charge la version officiellement promue du modèle via le Model Registry. On évite ainsi de servir un fichier local .pkl dépendant de la machine, d’un chemin, ou d’un conteneur. Le stage Production est une référence stable : on peut mettre à jour le modèle en production en changeant simplement le stage dans MLflow, sans modifier le code de l’API ni redéployer un fichier. Cela améliore la traçabilité, la reproductibilité. Enfin, utiliser un artifact de run fixe (run_id) est moins pratique car cela “fige” l’API sur un run précis.
+Pointer l’API vers models:/streamflow_churn/Production garantit qu’elle charge la version officiellement promue du modèle via le Model Registry. On évite ainsi de servir un fichier local .pkl dépendant de la machine, d’un chemin ou d’un conteneur. Le stage Production est une référence stable et on peut mettre à jour le modèle en production en changeant simplement le stage dans MLflow, sans modifier le code de l’API ni redéployer un fichier. Cela améliore la traçabilité, la reproductibilité. Enfin, utiliser un artifact de run fixe (run_id) est moins pratique car cela “fige” l’API sur un run précis.
 
 ---
 
@@ -186,7 +186,7 @@ Ici, l’API ne renvoie que des valeurs manquantes parce que Feast ne trouve pas
 
 ### **Question 5.c**
 
-En production, beaucoup d’échecs viennent des features plutôt que du modèle. Par exemple, on peut avoir l’entité absente : si le user_id demandé n’existe pas dans l’online store (nouvel utilisateur, faute de frappe, utilisateur jamais matérialisé), Feast renvoie des valeurs manquantes et l’API ne doit pas prédire. On peut aussi avoir un online store incomplet ou obsolète : si la matérialisation n’a pas été lancée, a échoué ou n’est pas à jour, certaines features deviennent manquantes même pour un utilisateur réel. 
+En production, beaucoup d’échecs viennent des features plutôt que du modèle. Par exemple, on peut avoir l’entité absente : si le user_id demandé n’existe pas dans l’online store (nouvel utilisateur, faute de frappe), Feast renvoie des valeurs manquantes et l’API ne doit pas prédire. On peut aussi avoir un online store incomplet ou obsolète : si la matérialisation n’a pas été lancée, a échoué ou n’est pas à jour, certaines features deviennent manquantes même pour un utilisateur réel. 
 
 Le check missing_features permet de détecter ça immédiatement côté API (avant d’appeler le modèle) ce qui évite des prédictions incohérentes et rend le diagnostic plus rapide (problème de données/materialisation et non du modèle).
 
@@ -208,15 +208,12 @@ Cela permet de changer de modèle sans modifier ni redéployer le code de l’AP
 
 Même avec MLflow, la reproductibilité peut encore casser à plusieurs endroits :
 
-- Les données : si les tables sources changent (corrections, suppressions, ajouts), le dataset reconstruit pour un même AS_OF peut différer.
+- Les données : si les tables sources changent (corrections, suppressions, ajouts), le dataset reconstruit pour un même AS_OF peut différer. Le conteneur Postgres permet de versionner et reproduire le résultat d'une étape passée.
 
-- La matérialisation des features : une online store obsolète ou mal synchronisée peut produire des features différentes de celles utilisées à l’entraînement.
+- Le code : une modification du script d’entraînement ou du preprocessing, sans versionnement casse le fait qu'on puisse comparer. Mais grace à Github nous avons les tags qui nous permettent de retrouver toutes les étapes et versions du code.
 
-- Le code : une modification du script d’entraînement ou du preprocessing, sans versionnement casse le fait qu'on puisse comparer.
+- L’environnement : une dépendance Python ou système différente (versions) peut modifier le comportement du modèle. Mais ici, on a des versions fixées pour nos librairies et l'envrionnement dans le .env.
 
-- L’environnement : une dépendance Python ou système différente (versions) peut modifier le comportement du modèle.
-
-- La configuration : un paramètre non fixé (seed, split) introduit de l’aléatoire non maîtrisé.
 
 
 
