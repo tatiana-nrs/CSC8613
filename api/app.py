@@ -4,6 +4,10 @@ from feast import FeatureStore
 import mlflow.pyfunc
 import pandas as pd
 import os
+import time
+
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.responses import Response
 
 app = FastAPI(title="StreamFlow Churn Prediction API")
 
@@ -12,6 +16,13 @@ REPO_PATH = "/repo"
 MODEL_NAME = "streamflow_churn"
 # TODO 1: complétez avec le nom de votre modèle
 MODEL_URI = f"models:/streamflow_churn/Production"
+
+# --- Prometheus metrics ---
+# TODO: Créez les métriques avec les noms suivants:
+# un Counter: "api_requests_total"
+# un Histogram: "api_request_latency_seconds"
+REQUEST_COUNT = Counter("api_requests_total", "Total number of API requests")
+REQUEST_LATENCY = Histogram("api_request_latency_seconds", "Latency of API requests in seconds")
 
 try:
     store = FeatureStore(repo_path=REPO_PATH)
@@ -34,10 +45,13 @@ def health():
 # TODO 2: Mettre une requête POST
 @app.post("/predict")
 def predict(payload: UserPayload):
+    start_time = time.time()
+    REQUEST_COUNT.inc()
+
     if store is None or model is None:
+        REQUEST_LATENCY.observe(time.time() - start_time)
         return {"error": "Model or feature store not initialized"}
 
-    # TODO (optionel) à adapter si besoin
     features_request = [
         "subs_profile_fv:months_active",
         "subs_profile_fv:monthly_fee",
@@ -55,33 +69,38 @@ def predict(payload: UserPayload):
         "support_agg_90d_fv:ticket_avg_resolution_hrs_90d",
     ]
 
-    # TODO 3 : Récupérer les features online
+    # 1) Récupérer les features online
     feature_dict = store.get_online_features(
         features=features_request,
         entity_rows=[{"user_id": payload.user_id}],
     ).to_dict()
 
+    # 2) Construire X (1 ligne)
     X = pd.DataFrame({k: [v[0]] for k, v in feature_dict.items()})
 
-    # Gestion des features manquantes
+    # 3) Gestion features manquantes
     if X.isnull().any().any():
         missing = X.columns[X.isnull().any()].tolist()
+        REQUEST_LATENCY.observe(time.time() - start_time)
         return {
             "error": f"Missing features for user_id={payload.user_id}",
             "missing_features": missing,
         }
 
-    # Nettoyage minimal (évite bugs de types)
+    # 4) Nettoyage: on enlève user_id si présent
     X = X.drop(columns=["user_id"], errors="ignore")
 
-    # TODO 4: appeler le modèle et produire la réponse JSON (prediction + proba optionnelle)
-    # Astuce : la plupart des modèles MLflow “pyfunc” utilisent model.predict(X)
-    # (on ne suppose pas predict_proba ici)
-    y_pred = model.predict(X)[0]
+    # 5) Prédiction
+    y_pred = model.predict(X)
 
-    # TODO 5 : Retourner la prédiction
+    REQUEST_LATENCY.observe(time.time() - start_time)
     return {
         "user_id": payload.user_id,
-        "prediction": int(y_pred),
+        "prediction": int(y_pred[0]),
         "features_used": X.to_dict(orient="records")[0],
     }
+
+@app.get("/metrics")
+def metrics():
+    # TODO: returnez une Response avec generate_latest() et CONTENT_TYPE_LATEST comme type de media
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
